@@ -1,12 +1,12 @@
 import localsolver
 
-def SDVRP(self, demands, C_C_Matrix, B_C_Matrix, Customer_IDs, str_time_limit):
+def SDVRP(self, demands, C_C_Matrix, B_C_Matrix, Customer_IDs, str_time_limit, number_trucks):
     demands_data = demands
     nb_customers = C_C_Matrix.shape[0]
     truck_capacity = self.truck_capacity
     dist_matrix_data = C_C_Matrix.tolist()
     dist_depot_data = B_C_Matrix.tolist()
-    nb_trucks = self.number_trucks
+    nb_trucks = number_trucks
 
     with localsolver.LocalSolver() as ls:
         model = ls.model
