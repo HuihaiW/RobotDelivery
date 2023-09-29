@@ -32,6 +32,15 @@ class RoadNetwork:
         self.CIDs = self.Customer_IDs
         self.baseID = [self.Base_IDs.index(b) for b in base_ID_list]
 
+        self.update_base()
+    
+    def update_base(self):
+        self.base_list = []
+        for ID in self.baseID:
+            b = base(ID, self.number_trucks, self.truck_capacity)
+            self.base_list.append(b)
+
+    
     def clean_matrixes(self):
         # Clean road segments that are not connected to the road networks
         records = []
@@ -76,7 +85,7 @@ class RoadNetwork:
                                                              number_trucks)
 
         return customer_list, quantity_list, total_distance
-    
+
     def update_demand(self):
         
         self.CIDs = self.Customer_IDs
@@ -86,4 +95,61 @@ class RoadNetwork:
             random_d = np.random.normal(d, d/2)
             self.demands_d.append(int(random_d))
         self.clean_demands()
+        self.update_base()
+
+    def get_service_customers(self):
+        custmer = self.CIDs
+        served_list = []
+        for i in range(len(self.baseID)):
+            b_c = self.bcM
+
+        for base in self.base_list:
+            c = base.select(served_list)
+            add = base.add_customer(c)
+            if not add:
+                base.add_task()
+                base.add_task_result()
+                base.init()
+            else:
+                served_list.append(c)
+
+class base():
+    def __init__(self, ID, NumRobots, robot_capacity):
+        self.ID = ID
+        self.NumRobots = NumRobots
+        self.robot_capacity = robot_capacity
+        self.task_list = []
+        self.task_result_list = []
+        self.base_init(self)
+
+    def select(selected):
+        c = 1
+        return c
+    
+    def add_customer(self, c):
+        self.cID.append(c)
+        return add
+
+    def add_task(self):
+        task = [self.bcM, self.ccM, self.cID]
+        self.task_list.append(task)
+
+    def add_task_result(self, demand, cc, bc, cID, str_time_limit, number_trucks):
+        customer_list, quantity_list, total_distance = SDVRP(self.robot_capacity, 
+                                                             demand,
+                                                             cc,
+                                                             bc,
+                                                             cID,
+                                                             str_time_limit,
+                                                             number_trucks)
+        self.task_result_list.append([customer_list, quantity_list, total_distance])
+
+    def base_init(self):
+        self.bcM = np.empty((0, 0))
+        self.ccM = np.empty((0, 0))
+        self.cID = []
+        self.weights = 0
+        
+
+
 
