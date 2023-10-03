@@ -99,18 +99,22 @@ class RoadNetwork:
         self.update_base()
 
     def system_planning(self):
-        custmer = self.CIDs
         served_list = []
-
-        for base in self.base_list:
-            c = base.select(served_list)
-            add = base.add_customer(c, self.demands_d, self.CIDs)
-            if not add:
-                base.add_task(self.ccM, self.demands_d)
-                base.add_task_result()
-                base.init()
-            else:
-                served_list.append(c)
+        while len(served_list) < len(self.demands_d):
+            for base in self.base_list:
+                c = base.select(served_list)
+                if not c == None:
+                    add = base.add_customer(c, self.demands_d)
+                if not add or c == None:
+                    print('add tasks')
+                    base.add_task(self.ccM)
+                    if base.ccM.shape[0] == 0:
+                        return 0
+                    base.add_task_result(base.demands, base.ccM, base.bcM, base.cID, self.str_time_limit, base.NumRobots)
+                    base.base_init()
+                else:
+                    # print('not adding')
+                    served_list.append(c)
 
 class base():
     def __init__(self, ID, NumRobots, robot_capacity, bcM):
@@ -121,26 +125,34 @@ class base():
         self.distance = bcM.tolist()
         self.task_list = []
         self.task_result_list = []
-        self.base_init(self)
+        self.base_init()
 
     def select(self, selected):
-        c = self.distance.index(self.distance_sorted[0])
         while True:
+            if len(self.distance_sorted) == 0:
+                return None
+            c = self.distance.index(self.distance_sorted[0])
             if c in selected:
-                pop = self.distance_sorted.pop[0]
+                pop = self.distance_sorted.pop(0)
             else:
+                pop = self.distance_sorted.pop(0)
                 return c
     
-    def add_customer(self, c, demand, CIDs):
-        if self.weights + demand[c] > self.robot_capacity:
+    def add_customer(self, c, demand):
+        if (self.weights + demand[c]) > self.robot_capacity * self.NumRobots:
             return False
+        # if len(self.distance_sorted) == 0:
+        #     self.weights += demand[c]
+        #     self.cID.append(c)
+        #     self.demands.append(demand[c])
+        #     return False
         else:
             self.weights += demand[c]
             self.cID.append(c)
-            # self.cID_O.append(CIDs[c])
+            self.demands.append(demand[c])
             return True
 
-    def add_task(self, ccM, demand):
+    def add_task(self, ccM):
         self.bcM = np.zeros((len(self.cID),))
         self.ccM = np.zeros((len(self.cID), len(self.cID)))
         for i in range(len(self.cID)):
@@ -149,7 +161,7 @@ class base():
             for j in range(len(self.cID)):
                 self.ccM[i][j] = ccM[i][j]
         
-        task = [self.bcM, self.ccM, self.cID]
+        task = [self.bcM, self.ccM, self.cID, self.demands]
         self.task_list.append(task)
 
     def add_task_result(self, demand, cc, bc, cID, str_time_limit, number_trucks):
@@ -168,6 +180,7 @@ class base():
         self.cID = []
         # self.cID_O = []
         self.weights = 0
+        self.demands = []
         
 
 

@@ -82,6 +82,6 @@ def SDVRP(truck_capacity, demands, C_C_Matrix, B_C_Matrix, Customer_IDs, str_tim
     #                 if q[i].value != 0:
     #                     q_l.append(q[i].value)
     #             q_list.append(q_l)
-            customer_list.append(c_list)
+            customer_list.append(c_list1)
             quantity_list.append(q_list)
     return customer_list, quantity_list, r_total_distance
