@@ -25,7 +25,7 @@ for i in range(len(OriginID)):
 demands_data = np.random.randint(0, 5, C_C_matrix.shape[0]).tolist()
 number_trucks = 10
 truck_capacity = 5
-base_ID = [20, 50]
+base_ID = [20]
 str_time_limit = "5"
 
 network = RoadNetwork(C_C_matrix, B_C_matrix, demands_data, number_trucks,
@@ -41,24 +41,3 @@ print(network.base_list[1].task_list[0][2])
 print(network.base_list[1].task_result_list[0][0])
 print(network.base_list[1].task_result_list[0][1])
 print(len(network.base_list[0].task_result_list))
-# customer_list, quantity_list, r_total_distance = network.route_planning(network.demands_d,
-#                                                                         network.ccM,
-#                                                                         network.bcM[network.baseID[0]],
-#                                                                         network.CIDs,
-#                                                                         network.str_time_limit,
-#                                                                         network.number_trucks)
-
-# print("##########################################")
-# print('Total Distance is: ', r_total_distance)
-# print("################customer list################")
-# for c in customer_list:
-#     if c == []:
-#         continue
-#     print(c)
-# print("################quantity list################")
-# for q in quantity_list:
-#     if q == []:
-#         continue
-#     print(q)
-
-# print(network.demands_d)

@@ -102,12 +102,15 @@ class RoadNetwork:
         served_list = []
         while len(served_list) < len(self.demands_d):
             for base in self.base_list:
+                print("***************************************************")
+                print("baseID", base.ID)
                 c = base.select(served_list)
                 if not c == None:
                     add = base.add_customer(c, self.demands_d)
                 if not add or c == None:
                     print('add tasks')
                     base.add_task(self.ccM)
+                    print(base.ccM.shape)
                     if base.ccM.shape[0] == 0:
                         return 0
                     base.add_task_result(base.demands, base.ccM, base.bcM, base.cID, self.str_time_limit, base.NumRobots)
@@ -139,6 +142,7 @@ class base():
                 return c
     
     def add_customer(self, c, demand):
+        print("adding customers ...")
         if (self.weights + demand[c]) > self.robot_capacity * self.NumRobots:
             return False
         # if len(self.distance_sorted) == 0:
@@ -165,6 +169,7 @@ class base():
         self.task_list.append(task)
 
     def add_task_result(self, demand, cc, bc, cID, str_time_limit, number_trucks):
+        print("adding task results ...")
         customer_list, quantity_list, total_distance = SDVRP(self.robot_capacity, 
                                                              demand,
                                                              cc,
@@ -173,14 +178,17 @@ class base():
                                                              str_time_limit,
                                                              number_trucks)
         self.task_result_list.append([customer_list, quantity_list, total_distance])
+        print("result adding correctly")
 
     def base_init(self):
+        print("init base ... ")
         self.bcM = np.empty((0, 0))
         self.ccM = np.empty((0, 0))
         self.cID = []
         # self.cID_O = []
         self.weights = 0
         self.demands = []
+        print("base initialized")
         
 
 
