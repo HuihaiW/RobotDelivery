@@ -38,7 +38,7 @@ class RoadNetwork:
         self.base_list = []
         for i in range(len(self.baseID)):
             ID = self.baseID[i]
-            bcM = self.bcM[i]
+            bcM = self.bcM[ID]
             b = base(ID, self.number_trucks, self.truck_capacity, bcM)
             self.base_list.append(b)
     
@@ -94,7 +94,7 @@ class RoadNetwork:
         self.demands_d = []
         for d in self.demands:
             random_d = np.random.normal(d, d/2)
-            self.demands_d.append(int(random_d))
+            self.demands_d.append(abs(int(random_d)))
         self.clean_demands()
         self.update_base()
 

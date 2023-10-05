@@ -14,7 +14,7 @@ def SDVRP(truck_capacity, demands, C_C_Matrix, B_C_Matrix, Customer_IDs, str_tim
         
         quantity = [None] * nb_trucks
         for k in range(nb_trucks):
-            quantity[k] = [model.int(0, demands_data[i]) for i in range(nb_customers)]
+            quantity[k] = [model.int(1, demands_data[i]) for i in range(nb_customers)]
     #     print(quantity[0][0].value)
             
         model.constraint(model.cover(customers_sequences))
