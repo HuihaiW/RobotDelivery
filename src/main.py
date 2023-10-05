@@ -23,13 +23,14 @@ for i in range(len(OriginID)):
     B_C_matrix[OriginID[i]-1][DestinID[i]-1] = Length[i]
 
 demands_data = np.random.randint(0, 5, C_C_matrix.shape[0]).tolist()
-number_trucks = 10
+number_trucks = 5
 truck_capacity = 5
 base_ID = [20, 30, 50]
-str_time_limit = "15"
+str_time_limit = "2"
 
 network = RoadNetwork(C_C_matrix, B_C_matrix, demands_data, number_trucks,
                       truck_capacity, base_ID, str_time_limit)
+
 network.update_demand()
 print(network.ccM.shape)
 print(network.bcM.shape)
@@ -37,8 +38,7 @@ print(len(network.demands_d))
 
 network.system_planning()
 
-print(network.base_list[0].task_list[0][2])
-print(network.base_list[0].task_list[0][2])
-print(network.base_list[0].task_result_list[0][0])
-print(network.base_list[0].task_result_list[0][1])
-print(len(network.base_list[0].task_result_list))
+for base in network.base_list:
+    baseResultPath = r'/home/huihai/Huihai/RobotDelivery/Result/'
+    base.save_result(baseResultPath, network)
+    base.optTasks(baseResultPath, baseResultPath)

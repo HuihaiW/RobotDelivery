@@ -3,6 +3,7 @@ import numpy as np
 from SDVRP import SDVRP
 import sys
 import math
+import os
 
 class RoadNetwork:
     def __init__(self, C_C_Matrix, B_C_Matrix, demands, number_trucks, 
@@ -39,7 +40,7 @@ class RoadNetwork:
         for i in range(len(self.baseID)):
             ID = self.baseID[i]
             bcM = self.bcM[ID]
-            b = base(ID, self.number_trucks, self.truck_capacity, bcM)
+            b = base(ID, self.number_trucks, self.truck_capacity, bcM, self.Customer_IDs)
             self.base_list.append(b)
     
     def clean_matrixes(self):
@@ -120,7 +121,7 @@ class RoadNetwork:
                     served_list.append(c)
 
 class base():
-    def __init__(self, ID, NumRobots, robot_capacity, bcM):
+    def __init__(self, ID, NumRobots, robot_capacity, bcM, networkIDList):
         self.ID = ID
         self.NumRobots = NumRobots
         self.robot_capacity = robot_capacity
@@ -128,6 +129,7 @@ class base():
         self.distance = bcM.tolist()
         self.task_list = []
         self.task_result_list = []
+        self.networkIDList = networkIDList
         self.base_init()
 
     def select(self, selected):
@@ -189,6 +191,82 @@ class base():
         self.weights = 0
         self.demands = []
         print("base initialized")
+    def save_result(self, saveFolderPath, network):
+        baseName = str(self.ID) + '.csv'
+        baseResultPath = os.path.join(saveFolderPath, baseName)
+        result = self.task_result_list
+        round = []
+        customer = []
+        weight = []
+        length = []
+        for i in range(len(result)):
+            for j in range(len(result[i][0])):
+                round.append(i)
+                base_c = result[i][0][j]
+                customer.append(base_c)
+                weight.append(result[i][1][j])            
+                l = 0
+                if len(base_c) > 1:
+                    l = network.B_C_matrix[self.ID][base_c[0]] + network.B_C_matrix[self.ID][base_c[-1]]
+                    for c in range(len(base_c), len(base_c) - 1):
+                        l += network.C_C_matrix[base_c[c][c+1]]
+                elif len(base_c) > 0:
+                    l = network.B_C_matrix[self.ID][base_c[0]] + network.B_C_matrix[self.ID][base_c[-1]]
+                length.append(l)
+
+        base_data = {'customer': customer, 'weight' : weight, 'round': round, 'length': length}
+        df = pd.DataFrame(base_data)
+        print("data result shape is: ", df.shape)
+        print(baseResultPath)
+        df.to_csv(baseResultPath)
+    def optTasks(self, resultfolder, save_path):
+        name = str(self.ID) + '.csv'
+        dpath = os.path.join(resultfolder, name)
+        df = pd.read_csv(dpath)
+        rounds = list(set(df['round'].values.tolist()))
+        lengthLL = []
+        # get length for each task in each round
+        for round in rounds:
+            l = df[df['round'] == round]['length'].values.tolist()
+            lengthLL.append(l)
+        # get number of robots for each base
+        num_robots = len(lengthLL[0])
+        
+        # deploy tasks for each robot, task are numbered as the order of origin tasks
+        optT = []
+            # init robot tasks
+        for i in range(num_robots):
+            optT.append([i])
+        robot_distance = [d for d in lengthLL[0]]
+
+            # optimize length
+        if len(rounds) > 1:
+            for r_i in range(1, len(rounds)):
+                task_distance = lengthLL[r_i]
+                sort = task_distance.copy()
+                sort.sort(reverse=True)
+                distances = robot_distance.copy()
+                distances.sort()
+                for j in range(num_robots):
+                    robot_id = robot_distance.index(distances[j])
+                    task_id = task_distance.index(sort[j])
+                    robot_distance[robot_id] = robot_distance[robot_id] + task_distance[task_id]
+                    optT[robot_id].append(num_robots*r_i + task_id)
+        df_opt = pd.DataFrame({'task': optT, 'distance': robot_distance})
+        new_name = 'optTask_' + str(self.ID) + '.csv'
+        new_path = os.path.join(save_path, new_name)
+        df_opt.to_csv(new_path)
+        
+
+        
+
+
+
+        
+                
+
+        
+
         
 
 
