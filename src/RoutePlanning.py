@@ -56,10 +56,12 @@ class RoadNetwork:
         self.C_C_matrix = np.delete(self.C_C_matrix, records, axis=1)
         self.B_C_matrix = np.delete(self.B_C_matrix, records, axis=1)
 
+        print(len(self.Base_IDs))
         for i in sorted(records, reverse=True):
+            print(i)
             del self.Customer_IDs[i]
             del self.demands[i]
-            del self.Base_IDs[i]
+            # del self.Base_IDs[i]
 
     def clean_demands(self):
         remove = []
@@ -94,21 +96,30 @@ class RoadNetwork:
 
         self.demands_d = []
         for d in self.demands:
-            random_d = np.random.normal(d, d/2)
+            # random_d = np.random.normal(d, d/2)
+            random_d = round(d)
             self.demands_d.append(abs(int(random_d)))
         self.clean_demands()
         self.update_base()
 
     def system_planning(self):
         served_list = []
-        while len(served_list) < len(self.demands_d):
+        while len(served_list) <= len(self.demands_d):
             for base in self.base_list:
                 print("***************************************************")
                 print("baseID", base.ID)
                 c = base.select(served_list)
+                if c == None: 
+                    print('add tasks')
+                    base.add_task(self.ccM)
+                    print(base.ccM.shape)
+                    if base.ccM.shape[0] == 0:
+                        return 0
+                    base.add_task_result(base.demands, base.ccM, base.bcM, base.cID, self.str_time_limit, base.NumRobots)
+                    base.base_init()
                 if not c == None:
-                    add = base.add_customer(c, self.demands_d)
-                if not add or c == None:
+                    add, self.demands_d = base.add_customer(c, self.demands_d)
+                if not add:
                     print('add tasks')
                     base.add_task(self.ccM)
                     print(base.ccM.shape)
@@ -137,26 +148,35 @@ class base():
             if len(self.distance_sorted) == 0:
                 return None
             c = self.distance.index(self.distance_sorted[0])
+            # print(self.distance_sorted)
             if c in selected:
-                pop = self.distance_sorted.pop(0)
+                self.distance_sorted.pop(0)
+                continue
             else:
-                pop = self.distance_sorted.pop(0)
                 return c
-    
+        
     def add_customer(self, c, demand):
         print("adding customers ...")
         if (self.weights + demand[c]) > self.robot_capacity * self.NumRobots:
-            return False
+            add_weight = self.robot_capacity * self.NumRobots - self.weights
+            networkDemand = demand
+            if add_weight > 0:
+                self.weights += add_weight
+                self.cID.append(c)
+                self.demands.append(add_weight)
+                networkDemand[c] = networkDemand[c] - add_weight
+            return False, networkDemand
         # if len(self.distance_sorted) == 0:
         #     self.weights += demand[c]
         #     self.cID.append(c)
         #     self.demands.append(demand[c])
         #     return False
         else:
+            self.distance_sorted.pop(0)
             self.weights += demand[c]
             self.cID.append(c)
             self.demands.append(demand[c])
-            return True
+            return True, demand
 
     def add_task(self, ccM):
         self.bcM = np.zeros((len(self.cID),))
