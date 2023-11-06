@@ -4,7 +4,7 @@ import numpy as np
 import os
 
 #Tract
-for i in range(1, 6):
+for i in range(2, 6):
     num_base = i
     for j in range(1, 6):
         num_trucks = j

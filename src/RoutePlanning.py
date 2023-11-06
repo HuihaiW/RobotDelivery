@@ -106,11 +106,11 @@ class RoadNetwork:
         served_list = []
         while len(served_list) <= len(self.demands_d):
             for base in self.base_list:
-                print("***************************************************")
+                print("**************************************")
                 print("baseID", base.ID)
                 c = base.select(served_list)
                 if c == None: 
-                    print('add tasks')
+                    print('add tasks: ', str(base.ID))
                     base.add_task(self.ccM)
                     print(base.ccM.shape)
                     if base.ccM.shape[0] == 0:
@@ -120,16 +120,19 @@ class RoadNetwork:
                 if not c == None:
                     add, self.demands_d = base.add_customer(c, self.demands_d)
                 if not add:
-                    print('add tasks')
+                    print('add tasks: ', str(base.ID))
                     base.add_task(self.ccM)
                     print(base.ccM.shape)
                     if base.ccM.shape[0] == 0:
-                        return 0
+                        base.base_init()
+                        continue
                     base.add_task_result(base.demands, base.ccM, base.bcM, base.cID, self.str_time_limit, base.NumRobots)
                     base.base_init()
                 else:
                     # print('not adding')
                     served_list.append(c)
+                if len(served_list) == len(self.demands_d):
+                    return 0
 
 class base():
     def __init__(self, ID, NumRobots, robot_capacity, bcM, networkIDList):
@@ -145,7 +148,7 @@ class base():
 
     def select(self, selected):
         while True:
-            if len(self.distance_sorted) == 0:
+            if len(self.distance_sorted) == 0 or self.distance_sorted[0] > 10000:
                 return None
             c = self.distance.index(self.distance_sorted[0])
             # print(self.distance_sorted)
@@ -212,6 +215,8 @@ class base():
         self.demands = []
         print("base initialized")
     def save_result(self, saveFolderPath, network):
+        if len(self.task_result_list) == 0:
+            return 0
         baseName = str(self.ID) + '.csv'
         baseResultPath = os.path.join(saveFolderPath, baseName)
         result = self.task_result_list
@@ -242,6 +247,8 @@ class base():
     def optTasks(self, resultfolder, save_path):
         name = str(self.ID) + '.csv'
         dpath = os.path.join(resultfolder, name)
+        if not os.path.exists(dpath):
+            return 0
         df = pd.read_csv(dpath)
         rounds = list(set(df['round'].values.tolist()))
         lengthLL = []
