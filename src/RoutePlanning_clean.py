@@ -21,7 +21,7 @@ class RoadNetwork:
         self.BCM, self.CCM, self.baseLst, self.initDemd = self.read_data(dataFolder, numBase)
 
 
-        self.initCIDs = np.array(list(range(self.initCCM.shape[0])))
+        self.initCIDs = np.array(list(range(self.CCM.shape[0])))
 
         self.Demd = self.update_demand(self.initDemd)
 
@@ -92,13 +92,14 @@ class RoadNetwork:
         demand = np.array(demand["TTDDemd"].values.tolist())
         return bcM, ccM, baseLst, demand
 
-    def update_demand(self, Dem):
+    def update_demand(self, Demd):
         dynDemd = []
-        for d in Dem:
+        for d in Demd:
             # random  = np.random.normal(d, d/2)
             random = round(d)
             dynDemd.append(random)
-            return dynDemd
+        self.Demd = dynDemd
+        return dynDemd
         
     def system_planning(self):
         served_list = []
@@ -137,33 +138,73 @@ class Base():
         self.BCM = BCM
         self.CCM = CCM
         self.Demd = Demd
-        self.CIDs = CIDs
+        self.CIDs = self.sortCID(CIDs)
         self.task = []
         self.taksLst = []
         self.resultLst = []
         self.baseInit()
 
     def baseInit(self):
-        self.sortedCID = self.sortCID()
         self.sumDemd = 0
         self.task = []
+        self.taskDemd = []
         self.active = True
 
-    def sortCID(self):
-        bcM = np.take(self.BCM, self.CIDs)
+    def sortCID(self, CIDs):
+        bcM = np.take(self.BCM, CIDs)
         p = bcM.argsort()
         sortedCID = self.CIDs[p]
         return sortedCID
-    def selectCustomer(self):
-        pass
-    def addTask(self):
-        pass
+    
+    def selectCustomer(self, selected):
+        for i in range(self.CIDs.shape[0]):
+            if self.CIDs[i] in selected:
+                continue
+            else:
+                return self.CIDs[i]
+        self.active = False
+        return 0
+
+    def addTask(self, c, selected, networkDemand):
+        if self.active:
+            leftCap = self.robotCapaCty * self.robotNum - self.sumDemd
+            demand = self.Demd[c]
+            if leftCap > demand:
+                self.task.append(c)
+                self.sumDemd += demand
+                self.taskDemd.append(demand)
+                selected.append(c)
+            elif leftCap == demand:
+                self.task.append(c)
+                self.sumDemd += demand
+                self.taskDemd.append(demand)
+                selected.append(c)
+                self.active = False
+            else:
+                self.task.append(c)
+                self.taskDemd.append(leftCap)
+                networkDemand[c] = demand - leftCap
+        return selected, networkDemand
+
     def getResult(self):
-        pass
+        if not self.active:
+            # get ccm
+            # get bcm
+            # already get demand
+            # append to task list
+            # result = SDVRP
+            # append to result list
+            pass
+
     def saveResult(self):
-        pass
+        if not self.active:
+            # save result
+            pass
+
     def optResult(self):
-        pass
+        if not self.active:
+            # optimize results
+            self.baseInit()
 
 class base():
     def __init__(self, ID, NumRobots, robot_capacity, bcM, networkIDList):

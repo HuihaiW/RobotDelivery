@@ -1,63 +1,72 @@
-from RoutePlanning import RoadNetwork
+from RoutePlanning_clean import RoadNetwork
 import pandas as pd
 import numpy as np
 import os
 
-#Tract
-for i in range(2, 6):
-    num_base = i
-    for j in range(1, 6):
-        num_trucks = j
-        truck_capacity = 15
-        str_time_limit = 10
 
-        tractFolder = r"Data/Tract"
-        resultFolder = r"Result/Tract"
-        tractList = os.listdir(tractFolder)
-        for tract in tractList:
-            # print(tract)
-            # if tract != "260":
-            #     continue
-            print("###############################################################################################")
-            print(i, j, tract)
-            # print(type(tract))
-            tractData = os.path.join(tractFolder, tract)
-            tractResultFolder = os.path.join(resultFolder, tract, str(num_base), str(num_trucks))
-            if not os.path.exists(tractResultFolder):
-                os.makedirs(tractResultFolder)
-            bcM = np.load(os.path.join(tractData, "bcM.npy"))
-            ccM = np.load(os.path.join(tractData, "ccM.npy"))
-            baseList = pd.read_csv(os.path.join(tractData, "Base_" + str(num_base) + "_2.csv"))
-            baseList = baseList.iloc[0].values[3:] - 1
+numBase = 1
+numTrucks = 1
+truckCapacity = 15
+str_time_limit = 10
+# print(os.getcwd())
+tractPth = r"Data/Tract/0"
+network = RoadNetwork(tractPth, numBase, numTrucks, truckCapacity, str_time_limit)
 
-            demand = pd.read_csv(os.path.join(tractData, "demand.csv"))
-            demand = demand["TTDDemd"].values.tolist()
+# #Tract
+# for i in range(2, 6):
+#     num_base = i
+#     for j in range(1, 6):
+#         num_trucks = j
+#         truck_capacity = 15
+#         str_time_limit = 10
 
-            print(bcM.shape)
-            print(ccM.shape)
-            network = RoadNetwork(ccM, bcM, demand, num_trucks,
-                            truck_capacity, baseList, str_time_limit)
+#         tractFolder = r"Data/Tract"
+#         resultFolder = r"Result/Tract"
+#         tractList = os.listdir(tractFolder)
+#         for tract in tractList:
+#             # print(tract)
+#             # if tract != "260":
+#             #     continue
+#             print("###############################################################################################")
+#             print(i, j, tract)
+#             # print(type(tract))
+#             tractData = os.path.join(tractFolder, tract)
+#             tractResultFolder = os.path.join(resultFolder, tract, str(num_base), str(num_trucks))
+#             if not os.path.exists(tractResultFolder):
+#                 os.makedirs(tractResultFolder)
+#             bcM = np.load(os.path.join(tractData, "bcM.npy"))
+#             ccM = np.load(os.path.join(tractData, "ccM.npy"))
+#             baseList = pd.read_csv(os.path.join(tractData, "Base_" + str(num_base) + "_2.csv"))
+#             baseList = baseList.iloc[0].values[3:] - 1
+
+#             demand = pd.read_csv(os.path.join(tractData, "demand.csv"))
+#             demand = demand["TTDDemd"].values.tolist()
+
+#             print(bcM.shape)
+#             print(ccM.shape)
+#             network = RoadNetwork(ccM, bcM, demand, num_trucks,
+#                             truck_capacity, baseList, str_time_limit)
             
-            # print(network.ccM.shape)
-            # print(network.bcM.shape)
-            # print(len(network.demands_d))
-            # print(network.demands_d)
-            # print(bcM)
-            # print(network.demands_d)
-            network.update_demand()
+#             # print(network.ccM.shape)
+#             # print(network.bcM.shape)
+#             # print(len(network.demands_d))
+#             # print(network.demands_d)
+#             # print(bcM)
+#             # print(network.demands_d)
+#             network.update_demand()
             
 
-            if len(network.demands_d) == 0:
-                continue
+#             if len(network.demands_d) == 0:
+#                 continue
 
-            network.system_planning()
+#             network.system_planning()
 
-            for base in network.base_list:
-                baseResultPath = tractResultFolder
-                base.save_result(baseResultPath, network)
-                base.optTasks(baseResultPath, baseResultPath)
+#             for base in network.base_list:
+#                 baseResultPath = tractResultFolder
+#                 base.save_result(baseResultPath, network)
+#                 base.optTasks(baseResultPath, baseResultPath)
 
-    # break
+#     # break
 
 
 # # C_C_df = pd.read_csv(r'/home/huihai/Huihai/RobotDelivery/Data/C_C.csv')
