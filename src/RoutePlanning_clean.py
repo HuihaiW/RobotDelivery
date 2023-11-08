@@ -6,102 +6,100 @@ import math
 import os
 
 class RoadNetwork:
-    def __init__(self, C_C_Matrix, B_C_Matrix, demands, number_trucks, 
-                 truck_capacity, base_ID_list, str_time_limit):
-        # will not changed by demand clean
-        self.C_C_matrix = C_C_Matrix
-        self.B_C_matrix = B_C_Matrix
-
-        # changed by demand clean
-        self.ccM = self.C_C_matrix
-        self.bcM = self.B_C_matrix
-
-        self.demands = demands
-        self.demands_d = []
-
-        self.Customer_IDs = list(range(C_C_Matrix.shape[0]))
+    def __init__(self, 
+                 dataFolder, 
+                 numBase, 
+                 number_trucks, 
+                 truck_capacity, 
+                 str_time_limit):
         
-        self.Base_IDs = list(range(B_C_Matrix.shape[0]))
-
-        self.number_trucks = number_trucks
+        self.numTrucks = number_trucks
         self.truck_capacity = truck_capacity
-        self.str_time_limit = str_time_limit
-        self.clean_matrixes()
-
-        self.ccM = self.C_C_matrix
-        self.bcM = self.B_C_matrix
-        self.CIDs = self.Customer_IDs
-        self.baseID = [self.Base_IDs.index(b) for b in base_ID_list]
-
-        self.update_base()
-    
-    def update_base(self):
-        self.base_list = []
-        for i in range(len(self.baseID)):
-            ID = self.baseID[i]
-            bcM = self.bcM[ID]
-            b = base(ID, self.number_trucks, self.truck_capacity, bcM, self.Customer_IDs)
-            self.base_list.append(b)
-    
-    def clean_matrixes(self):
-        # Clean road segments that are not connected to the road networks
-        records = []
-        for i in range(self.C_C_matrix.shape[0]):
-            row = self.C_C_matrix[i]
-            ave = row.sum()/(self.C_C_matrix.shape[0] - 1)
-            if ave > 100000000.0:
-                records.append(i)
-
-        self.C_C_matrix = np.delete(self.C_C_matrix, records, axis=0)
-        self.C_C_matrix = np.delete(self.C_C_matrix, records, axis=1)
-        self.B_C_matrix = np.delete(self.B_C_matrix, records, axis=1)
-
-        print(len(self.Base_IDs))
-        for i in sorted(records, reverse=True):
-            # print(i)
-            del self.Customer_IDs[i]
-            del self.demands[i]
-            # del self.Base_IDs[i]
-
-    def clean_demands(self):
-        remove = []
-        for i in range(len(self.demands_d)):
-            if self.demands_d[i] == 0:
-                remove.append(i)
-                
-        self.ccM = np.delete(self.ccM, remove, axis=0)
-        self.ccM = np.delete(self.ccM, remove, axis=1)
-        self.bcM = np.delete(self.bcM, remove, axis=1)
-
-        for i in sorted(remove, reverse=True):
-            del self.CIDs[i]
-            del self.demands_d[i]
-
-    def route_planning(self, demand, cc, bc, customer_id, str_time_limit, number_trucks):
-        # route planning for each base
-
-        customer_list, quantity_list, total_distance = SDVRP(self, 
-                                                             demand,
-                                                             cc,
-                                                             bc,
-                                                             customer_id,
-                                                             str_time_limit,
-                                                             number_trucks)
-
-        return customer_list, quantity_list, total_distance
-
-    def update_demand(self):
+        self.strTimeLimit = str_time_limit
         
-        self.CIDs = self.Customer_IDs
+        # will not changed by demand clean
+        self.BCM, self.CCM, self.baseLst, self.initDemd = self.read_data(dataFolder, numBase)
 
-        self.demands_d = []
-        for d in self.demands:
-            # random_d = np.random.normal(d, d/2)
-            random_d = round(d)
-            self.demands_d.append(abs(int(random_d)))
-        self.clean_demands()
-        self.update_base()
 
+        self.initCIDs = np.array(list(range(self.initCCM.shape[0])))
+
+        self.Demd = self.update_demand(self.initDemd)
+
+        self.CIDs = self.getCIDs(self.initCIDs, self.BCM, self.baseLst)
+
+        self.baseInit()
+
+    def baseInit(self):
+        self.baseObjLst = []
+        for base in self.baseLst:
+            newBase = Base(base, self.numTrucks, 
+                           self.truck_capacity, 
+                           self.CIDs, 
+                           self.BCM, 
+                           self.CCM, 
+                           self.Demd)
+            self.baseObjLst.append(newBase)
+
+    def getCIDs(self, initCIDs, initBCM, baseLst):
+        # get IDs of customers that served by existing bases
+        reference = np.zeros(initBCM[0].shape)
+        for base in baseLst:
+            reference += initBCM[int(base)]
+        reference = reference / len(baseLst)
+        removeCIDLst = []
+        for i in range(len(reference)):
+            if reference[i] == 1000000000:
+                removeCIDLst.append(i)
+        CIDs = np.delete(initCIDs, removeCIDLst)
+        return CIDs
+    
+    def cleanIsolation(self, initCCM, initBCM, initDem, initCIDs, baseLst):
+        reference = np.zeros(initBCM[0].shape)
+        for base in baseLst:
+            print(base)
+            reference += initBCM[int(base)]
+        reference = reference / len(baseLst)
+        removeCIDLst = []
+        for i in range(len(reference)):
+            if reference[i] == 1000000000:
+                removeCIDLst.append(i)
+        ccm = initCCM
+        bcm = initBCM
+        demand = initDem
+        CIDs = initCIDs
+        
+        #remove customers - customers: by columne and by row
+        ccm = np.delete(ccm, removeCIDLst, axis=0)
+        ccm = np.delete(ccm, removeCIDLst, axis=1)
+        bcm = np.delete(bcm, removeCIDLst, axis=1)
+        #remove demands
+        demand = np.array(initDem)
+        demand = np.delete(demand, removeCIDLst)
+        CIDs = np.array(CIDs)
+        CIDs = np.delete(CIDs, removeCIDLst)
+        print(demand)
+        #remove customers in base
+        return ccm, bcm, demand, CIDs
+
+    def read_data(self, dataFolder, numBase):
+        #get data from data folder
+        bcM = np.load(os.path.join(dataFolder, "bcM.npy"))
+        ccM = np.load(os.path.join(dataFolder, "ccM.npy"))
+        baseLst = pd.read_csv(os.path.join(dataFolder, "Base_" + str(numBase) + "_2.csv"))
+        baseLst = baseLst.iloc[0].values[3:] - 1
+        baseLst = np.array(baseLst)
+        demand = pd.read_csv(os.path.join(dataFolder, "demand.csv"))
+        demand = np.array(demand["TTDDemd"].values.tolist())
+        return bcM, ccM, baseLst, demand
+
+    def update_demand(self, Dem):
+        dynDemd = []
+        for d in Dem:
+            # random  = np.random.normal(d, d/2)
+            random = round(d)
+            dynDemd.append(random)
+            return dynDemd
+        
     def system_planning(self):
         served_list = []
         while len(served_list) <= len(self.demands_d):
@@ -130,6 +128,42 @@ class RoadNetwork:
                 else:
                     # print('not adding')
                     served_list.append(c)
+
+class Base():
+    def __init__(self, baseID, robotNum, robotCapaCty, CIDs, BCM, CCM, Demd):
+        self.ID = baseID
+        self.robotCapaCty = robotCapaCty
+        self.robotNum = robotNum
+        self.BCM = BCM
+        self.CCM = CCM
+        self.Demd = Demd
+        self.CIDs = CIDs
+        self.task = []
+        self.taksLst = []
+        self.resultLst = []
+        self.baseInit()
+
+    def baseInit(self):
+        self.sortedCID = self.sortCID()
+        self.sumDemd = 0
+        self.task = []
+        self.active = True
+
+    def sortCID(self):
+        bcM = np.take(self.BCM, self.CIDs)
+        p = bcM.argsort()
+        sortedCID = self.CIDs[p]
+        return sortedCID
+    def selectCustomer(self):
+        pass
+    def addTask(self):
+        pass
+    def getResult(self):
+        pass
+    def saveResult(self):
+        pass
+    def optResult(self):
+        pass
 
 class base():
     def __init__(self, ID, NumRobots, robot_capacity, bcM, networkIDList):

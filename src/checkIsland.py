@@ -10,6 +10,7 @@ for tract in ["289"]:
     for i in range(ccM.shape[0]):
         for j in range(ccM.shape[1]):
             if ccM[i][j] > 100000:
+                print(ccM[i][j])
                 ifIsland = True
                 print(i, j)
     if ifIsland:
