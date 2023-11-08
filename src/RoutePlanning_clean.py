@@ -11,10 +11,12 @@ class RoadNetwork:
                  numBase, 
                  number_trucks, 
                  truck_capacity, 
-                 str_time_limit):
+                 str_time_limit,
+                 resultFolder):
         self.numTrucks = number_trucks
         self.truck_capacity = truck_capacity
         self.strTimeLimit = str_time_limit
+        self.resultFolder = resultFolder
         
         # will not changed by demand clean
         self.BCM, self.CCM, self.baseLst, self.initDemd = self.read_data(dataFolder, numBase)
@@ -103,33 +105,20 @@ class RoadNetwork:
         return dynDemd
         
     def system_planning(self):
-        served_list = []
-        while len(served_list) <= len(self.demands_d):
-            for base in self.base_list:
-                print("***************************************************")
-                print("baseID", base.ID)
-                c = base.select(served_list)
-                if c == None: 
-                    print('add tasks')
-                    base.add_task(self.ccM)
-                    print(base.ccM.shape)
-                    if base.ccM.shape[0] == 0:
-                        return 0
-                    base.add_task_result(base.demands, base.ccM, base.bcM, base.cID, self.str_time_limit, base.NumRobots)
-                    base.base_init()
-                if not c == None:
-                    add, self.demands_d = base.add_customer(c, self.demands_d)
-                if not add:
-                    print('add tasks')
-                    base.add_task(self.ccM)
-                    print(base.ccM.shape)
-                    if base.ccM.shape[0] == 0:
-                        return 0
-                    base.add_task_result(base.demands, base.ccM, base.bcM, base.cID, self.str_time_limit, base.NumRobots)
-                    base.base_init()
-                else:
-                    # print('not adding')
-                    served_list.append(c)
+        servedLst = []
+        while len(servedLst) < self.CIDs.shape[0]:
+            for base in self.baseObjLst:
+                c, servedLst = base.selectCustomer(servedLst)
+                servedLst, self.Demd = base.addTask(c, servedLst,self.Demd)
+                base.getResult()
+        for base in self.baseObjLst:
+            if len(base.task) > 0:
+                base.active = False
+                base.getResult()
+            base.saveResult(self.resultFolder)
+            base.optResult(self.resultFolder)
+
+
 
 class Base():
     def __init__(self, str_time_limit, baseID, robotNum, robotCapaCty, CIDs, BCM, CCM, Demd):
@@ -163,10 +152,13 @@ class Base():
         for i in range(self.CIDs.shape[0]):
             if self.CIDs[i] in selected:
                 continue
+            elif self.Demd[self.CIDs[i]] == 0:
+                selected.append(self.CIDs[i])
+                continue
             else:
-                return self.CIDs[i]
+                return self.CIDs[i], selected
         self.active = False
-        return 0
+        return 0, selected
 
     def addTask(self, c, selected, networkDemand):
         if self.active:
@@ -174,6 +166,9 @@ class Base():
             # if leftCap <= 0:
             #     return selected, networkDemand
             demand = self.Demd[c]
+            if demand == 0:
+                selected.append(c)
+                return selected, networkDemand
             if leftCap > demand:
                 self.task.append(c)
                 self.sumDemd += demand
@@ -221,35 +216,34 @@ class Base():
             self.baseInit()
 
     def saveResult(self, saveFolderPath):
-        if not self.active:
-            if len(self.resultLst) == 0:
-                return 0
-            baseName = str(self.ID) + ".csv"
-            baseResultPath = os.path.join(saveFolderPath, baseName)
-            result = self.resultLst
-            round = []
-            customer = []
-            weight = []
-            length = []
-            for i in range(len(result)):
-                for j in range(len(result[i][0])):
-                    round.append(i)
-                    customer.append(result[i][0][j])
-                    weight.append(result[i][1][j])
-                    c = result[i][0][j]
-                    l = 0
-                    if len(c) > 1:
-                        l = self.BCM[self.ID][c[0]] + self.BCM[self.ID][c[-1]]
-                        for ic in range(0, len(c)-1):
-                            l += self.CCM[c[i]][c[i+1]]
-                    if len(c) == 1:
-                        l = self.BCM[self.ID][c[0]] + self.BCM[self.ID][c[-1]]
-                    length.append(l)
-            baseData = {'customer': customer, 'weight': weight,
-                        'round': round, 'length': length}
-            df = pd.DataFrame(baseData)
-            print("data result shape is: ", df.shape)
-            df.to_csv(baseResultPath)
+        if len(self.resultLst) == 0:
+            return 0
+        baseName = str(self.ID) + ".csv"
+        baseResultPath = os.path.join(saveFolderPath, baseName)
+        result = self.resultLst
+        round = []
+        customer = []
+        weight = []
+        length = []
+        for i in range(len(result)):
+            for j in range(len(result[i][0])):
+                round.append(i)
+                customer.append(result[i][0][j])
+                weight.append(result[i][1][j])
+                c = result[i][0][j]
+                l = 0
+                if len(c) > 1:
+                    l = self.BCM[self.ID][c[0]] + self.BCM[self.ID][c[-1]]
+                    for ic in range(0, len(c)-1):
+                        l += self.CCM[c[i]][c[i+1]]
+                if len(c) == 1:
+                    l = self.BCM[self.ID][c[0]] + self.BCM[self.ID][c[-1]]
+                length.append(l)
+        baseData = {'customer': customer, 'weight': weight,
+                    'round': round, 'length': length}
+        df = pd.DataFrame(baseData)
+        print("data result shape is: ", df.shape)
+        df.to_csv(baseResultPath)
 
     def optResult(self, resultFolderPath):
         name = str(self.ID) + '.csv'
