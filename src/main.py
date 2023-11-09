@@ -6,10 +6,19 @@ import os
 tractFolder = r"Data/Tract"
 saveFolder = r"Result/Tract"
 tractList = os.listdir(tractFolder)
+tractList.sort()
+
+tractList = tractList[int(len(tractList)/2):]
 for tract in tractList:
+    if int(tract) != 255:
+        continue
+    print(tract)
     tractPth = os.path.join(tractFolder, str(tract))
     for i in range(1, 6):
+        if i < 4:
+            continue
         for j in range(1, 6):
+            print(i, j)
             savePth = os.path.join(saveFolder, str(tract), str(i), str(j))
 
             numBase = i
@@ -20,7 +29,8 @@ for tract in tractList:
             if not os.path.exists(savePth):
                 os.makedirs(savePth)
             network = RoadNetwork(tractPth, numBase, numTrucks, truckCapacity, str_time_limit, savePth)
-            network.system_planning()
+            if network.exist:
+                network.system_planning()
 
 # #Tract
 # for i in range(2, 6):

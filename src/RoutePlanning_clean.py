@@ -17,18 +17,19 @@ class RoadNetwork:
         self.truck_capacity = truck_capacity
         self.strTimeLimit = str_time_limit
         self.resultFolder = resultFolder
+        self.exist = True
         
         # will not changed by demand clean
         self.BCM, self.CCM, self.baseLst, self.initDemd = self.read_data(dataFolder, numBase)
 
+        if self.exist:
+            self.initCIDs = np.array(list(range(self.CCM.shape[0])))
 
-        self.initCIDs = np.array(list(range(self.CCM.shape[0])))
+            self.Demd = self.update_demand(self.initDemd)
 
-        self.Demd = self.update_demand(self.initDemd)
+            self.CIDs = self.getCIDs(self.initCIDs, self.BCM, self.baseLst)
 
-        self.CIDs = self.getCIDs(self.initCIDs, self.BCM, self.baseLst)
-
-        self.baseInit()
+            self.baseInit()
 
     def baseInit(self):
         self.baseObjLst = []
@@ -89,8 +90,11 @@ class RoadNetwork:
         bcM = np.load(os.path.join(dataFolder, "bcM.npy"))
         ccM = np.load(os.path.join(dataFolder, "ccM.npy"))
         baseLst = pd.read_csv(os.path.join(dataFolder, "Base_" + str(numBase) + "_2.csv"))
-        baseLst = baseLst.iloc[0].values[3:] - 1
-        baseLst = np.array(baseLst)
+        if baseLst.shape[0] == 0:
+            self.exist = False
+        else: 
+            baseLst = baseLst.iloc[0].values[3:] - 1
+            baseLst = np.array(baseLst)
         demand = pd.read_csv(os.path.join(dataFolder, "demand.csv"))
         demand = np.array(demand["TTDDemd"].values.tolist())
         return bcM, ccM, baseLst, demand
