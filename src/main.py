@@ -7,16 +7,13 @@ tractFolder = r"Data/Tract"
 saveFolder = r"Result/Tract"
 tractList = os.listdir(tractFolder)
 tractList.sort()
-
+existLst = os.listdir(saveFolder)
 tractList = tractList[int(len(tractList)/2):]
 for tract in tractList:
-    if int(tract) != 255:
+    if tract in existLst:
         continue
-    print(tract)
     tractPth = os.path.join(tractFolder, str(tract))
     for i in range(1, 6):
-        if i < 4:
-            continue
         for j in range(1, 6):
             print(i, j)
             savePth = os.path.join(saveFolder, str(tract), str(i), str(j))
