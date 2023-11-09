@@ -123,7 +123,7 @@ class RoadNetwork:
 class Base():
     def __init__(self, str_time_limit, baseID, robotNum, robotCapaCty, CIDs, BCM, CCM, Demd):
         self.str_time_limit = str_time_limit
-        self.ID = baseID
+        self.ID = int(baseID)
         self.robotCapaCty = robotCapaCty
         self.robotNum = robotNum
 
@@ -132,7 +132,7 @@ class Base():
         self.Demd = Demd
         self.CIDs = self.sortCID(CIDs)
         self.task = []
-        self.taksLst = []
+        self.taskLst = []
         self.resultLst = []
         self.baseInit()
 
@@ -145,7 +145,7 @@ class Base():
     def sortCID(self, CIDs):
         bcM = np.take(self.BCM, CIDs)
         p = bcM.argsort()
-        sortedCID = self.CIDs[p]
+        sortedCID = CIDs[p]
         return sortedCID
     
     def selectCustomer(self, selected):
@@ -188,20 +188,28 @@ class Base():
         return selected, networkDemand
 
     def getResult(self):
-        if not self.active:
+        if not self.active and len(self.task) > 0:
             # get ccm from self.task
             # get bcm from self.task
             bcM = np.zeros((len(self.task)))
             ccM = np.zeros((len(self.task), len(self.task)))
-            for i in self.task:
-                bcM[i] = self.BCM[self.task[i]]
-                for j in self.task:
+            for i in range(len(self.task)):
+                # print(self.task[i])
+                # print(self.ID)
+                bcM[i] = self.BCM[int(self.ID)][self.task[i]]
+                for j in range(len(self.task)):
+                    # print(self.CCM.shape)
+                    # print(self.task[i])
+                    # print(self.task[j])
                     ccM[i][j] = self.CCM[self.task[i]][self.task[j]]
             # already get demand
             task = [bcM, ccM, self.task, self.taskDemd]
             # append to task list
             self.taskLst.append(task)
             print("getting results")
+            print(ccM)
+            print(bcM)
+            print(self.taskDemd)
             # result = SDVRP
             resultCID, resultQuantity, resultTotDist = SDVRP(self.robotCapaCty,
                                                              self.taskDemd,
@@ -213,10 +221,14 @@ class Base():
             # append to result list
             self.resultLst.append([resultCID, resultQuantity, resultTotDist])
             print("result is added correctly")
+            # print(self.task)
+            # print(ccM)
+            # print(bcM)
             self.baseInit()
 
     def saveResult(self, saveFolderPath):
         if len(self.resultLst) == 0:
+            print("not result")
             return 0
         baseName = str(self.ID) + ".csv"
         baseResultPath = os.path.join(saveFolderPath, baseName)
@@ -235,7 +247,7 @@ class Base():
                 if len(c) > 1:
                     l = self.BCM[self.ID][c[0]] + self.BCM[self.ID][c[-1]]
                     for ic in range(0, len(c)-1):
-                        l += self.CCM[c[i]][c[i+1]]
+                        l += self.CCM[c[ic]][c[ic+1]]
                 if len(c) == 1:
                     l = self.BCM[self.ID][c[0]] + self.BCM[self.ID][c[-1]]
                 length.append(l)
@@ -266,10 +278,12 @@ class Base():
         optTaskLst = []
         for a in roundTaskLst:
             optTaskLst.append([a])
-        optLenLst.append(roundLenLst)
+        optLenLst = roundLenLst
 
         if len(rounds) > 1:
-            for round in rounds:
+            for roundIndex in range(1, len(rounds)):
+                print("in round:", roundIndex)
+                round = rounds[roundIndex]
                 roundDF = df[df["round"] == round]
                 roundTaskLst = roundDF["taskID"].values
                 roundLenLst = roundDF["length"].values
@@ -279,7 +293,11 @@ class Base():
                 sortedRoundTaskLst = roundTaskLst[p]
                 sortedRoundLenLst = roundLenLst[p]
                 sortedOptLenLst = sorted(optLenLst, reverse=True)
+                # print(type(optLenLst[0]))
+                # print(sortedRoundLenLst)
+                # print(sortedOptLenLst)
                 for i in range(sortedRoundLenLst.shape[0]):
+                    # print(i)
                     rIndex = optLenLst.index(sortedOptLenLst[i])
                     optTaskLst[rIndex].append(sortedRoundTaskLst[i])
                     optLenLst[rIndex] += sortedRoundLenLst[i]

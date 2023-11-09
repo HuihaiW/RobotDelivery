@@ -3,14 +3,24 @@ import pandas as pd
 import numpy as np
 import os
 
+tractFolder = r"Data/Tract"
+saveFolder = r"Result/Tract"
+tractList = os.listdir(tractFolder)
+for tract in tractList:
+    tractPth = os.path.join(tractFolder, str(tract))
+    for i in range(1, 6):
+        for j in range(1, 6):
+            savePth = os.path.join(saveFolder, str(tract), str(i), str(j))
 
-numBase = 1
-numTrucks = 1
-truckCapacity = 15
-str_time_limit = 10
-# print(os.getcwd())
-tractPth = r"Data/Tract/0"
-network = RoadNetwork(tractPth, numBase, numTrucks, truckCapacity, str_time_limit)
+            numBase = i
+            numTrucks = j
+            truckCapacity = 15
+            str_time_limit = 10
+            # print(os.getcwd())
+            if not os.path.exists(savePth):
+                os.makedirs(savePth)
+            network = RoadNetwork(tractPth, numBase, numTrucks, truckCapacity, str_time_limit, savePth)
+            network.system_planning()
 
 # #Tract
 # for i in range(2, 6):
