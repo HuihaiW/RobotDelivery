@@ -148,7 +148,11 @@ class Base():
         self.active = True
 
     def sortCID(self, CIDs):
-        bcM = np.take(self.BCM, CIDs)
+        bcM = np.take(self.BCM[self.ID], CIDs)
+        # bcM1 = np.take(self.BCM, CIDs)
+        # print(bcM - bcM1)
+        # print("ID size is: ", self.BCM.shape)
+        # print("sort ID size is: ", bcM.shape)
         p = bcM.argsort()
         sortedCID = CIDs[p]
         return sortedCID
