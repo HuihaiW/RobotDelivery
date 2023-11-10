@@ -95,6 +95,7 @@ class RoadNetwork:
         else: 
             baseLst = baseLst.iloc[0].values[3:] - 1
             baseLst = np.array(baseLst)
+            baseLst = baseLst[~np.isnan(baseLst)]
         demand = pd.read_csv(os.path.join(dataFolder, "demand.csv"))
         demand = np.array(demand["TTDDemd"].values.tolist())
         return bcM, ccM, baseLst, demand
