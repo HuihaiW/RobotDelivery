@@ -7,8 +7,7 @@ tractFolder = r"Data/Tract"
 # saveFolder = r"Result/Tract"
 saveFolder = r"Result/Tract2"
 # tractList = os.listdir(tractFolder)
-tractList = ["110", "113", "118", "144", "148", "16", "164", "192", "193", "195", "2", "225", "252", "260", "268", "271",
-             "286", "289", "29", "31", "4", "50", "59", "78", "83", "86", "94"]
+tractList = ["110", "113", "118", "144", "148", "16", "164", "192", "193", "195", "2"]
 tractList.sort()
 # existLst = os.listdir(saveFolder)
 # tractList = tractList[int(len(tractList)/2):]
@@ -40,7 +39,7 @@ for tract in tractList:
             numBase = i
             numTrucks = j
             truckCapacity = 15
-            str_time_limit = 10
+            str_time_limit = 5
             # print(os.getcwd())
             if not os.path.exists(savePth):
                 os.makedirs(savePth)
