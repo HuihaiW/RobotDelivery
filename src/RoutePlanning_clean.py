@@ -164,6 +164,8 @@ class Base():
             elif self.Demd[self.CIDs[i]] == 0:
                 selected.append(self.CIDs[i])
                 continue
+            elif self.BCM[self.ID][self.CIDs[i]] > 1000000:
+                continue
             else:
                 return self.CIDs[i], selected
         self.active = False
