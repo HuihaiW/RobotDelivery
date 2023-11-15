@@ -134,11 +134,19 @@ def readDataTruck(TractFolder, ccMPath):
 
 ###############################################################################
 # GET ROBOT DELIVERY ANALYSIS RESULTS
+# "totalDistance"
+# "CO2 emission"
+# "totalPackagesDelivered"
+# "totalCustmerServed"
+# "longestDistance"
+
+
+
 dataFolder = r"Result/Tract"
 tractLst = os.listdir(dataFolder)
 tractLst.sort()
 tractRow = []
-task = "totalPackagesDelivered"
+task = "longestDistance"
 for tract in tractLst:
     print("Analysing Tract: ", tract)
     tractFolder = os.path.join(dataFolder, tract)
@@ -146,4 +154,4 @@ for tract in tractLst:
     tractRow.append(data)
 tractDf = pd.DataFrame(tractRow)
 tractDf["Tracts"] = tractLst
-tractDf.to_csv(r"Result/tractTotalPackages.csv")
+tractDf.to_csv(r"Result/tractLongestDist.csv")
