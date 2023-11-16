@@ -32,7 +32,7 @@ def readDataRobot(TractFolder, reader = "totalDistance"):
                         df = pd.read_csv(optPath)
                         dfDist = df["distance"].values.sum()
                         dist += dfDist
-                    data.append(dist/3600 * 0.061)
+                    data.append(dist/3600 * 0.178)
                 else:
                     data.append(1000000000)
                 
@@ -146,7 +146,7 @@ dataFolder = r"Result/Tract"
 tractLst = os.listdir(dataFolder)
 tractLst.sort()
 tractRow = []
-task = "longestDistance"
+task = "CO2 emission"
 for tract in tractLst:
     print("Analysing Tract: ", tract)
     tractFolder = os.path.join(dataFolder, tract)
@@ -154,4 +154,4 @@ for tract in tractLst:
     tractRow.append(data)
 tractDf = pd.DataFrame(tractRow)
 tractDf["Tracts"] = tractLst
-tractDf.to_csv(r"Result/tractLongestDist.csv")
+tractDf.to_csv(r"Result/tractCO2Emission.csv")
