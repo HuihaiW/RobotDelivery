@@ -125,10 +125,9 @@ for tract in tractLst:
     tractFolder = os.path.join(dataFolder, tract)
     ccMPath = os.path.join("Data", "Tract", tract, "ccM.npy")
     consumption = readDataTruck(tractFolder, ccMPath)
-    tractRow.append(consumption)
+    tractRow.append([consumption, int(tract)])
 
-tractDf = pd.DataFrame(tractRow)
-tractDf["Tracts"] = tractLst
+tractDf = pd.DataFrame(tractRow, columns=["CO2", "Tracts"])
 tractDf.to_csv(r"Result/tractTruckCO2_vhicel.csv")
 
 
