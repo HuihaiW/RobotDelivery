@@ -84,7 +84,7 @@ def readDataRobot(TractFolder, reader = "totalDistance"):
                         optmax.append(dfDist)
                     data.append(max(optmax)/3600.0)
                 else:
-                    data.append(0)
+                    data.append(100000000)
     return data
 
 def readDataTruck(TractFolder, ccMPath):
@@ -111,47 +111,47 @@ def readDataTruck(TractFolder, ccMPath):
                     dis = ccM[c[j], c[j+1]]
                     # consumption += ((totWeight-w[j])/1000 * dis * 0.000621) * 161.8
                     # by vehicel emission
-                    consumption += dis * 0.000621 / 6.5 * 8887
+                    consumption += dis * 0.000621 / 6.5 * 8887 / 1000
     return consumption
 
 #***************************************************************************
 #GET DELIVERY TRUCK C02 EMISSION
-# dataFolder = r"Result/TractTruck"
-# tractLst = os.listdir(dataFolder)
-# tractLst.sort()
-# tractRow = []
-# for tract in tractLst:
-#     print("Analysing Tract: ", tract)
-#     tractFolder = os.path.join(dataFolder, tract)
-#     ccMPath = os.path.join("Data", "Tract", tract, "ccM.npy")
-#     consumption = readDataTruck(tractFolder, ccMPath)
-#     tractRow.append(consumption)
-
-# tractDf = pd.DataFrame(tractRow)
-# tractDf["Tracts"] = tractLst
-# tractDf.to_csv(r"Result/tractTruckCO2_vhicel.csv")
-
-
-###############################################################################
-# GET ROBOT DELIVERY ANALYSIS RESULTS
-# "totalDistance"
-# "CO2 emission"
-# "totalPackagesDelivered"
-# "totalCustmerServed"
-# "longestDistance"
-
-
-
-dataFolder = r"Result/Tract"
+dataFolder = r"Result/TractTruck"
 tractLst = os.listdir(dataFolder)
 tractLst.sort()
 tractRow = []
-task = "CO2 emission"
 for tract in tractLst:
     print("Analysing Tract: ", tract)
     tractFolder = os.path.join(dataFolder, tract)
-    data = readDataRobot(tractFolder, task)
-    tractRow.append(data)
+    ccMPath = os.path.join("Data", "Tract", tract, "ccM.npy")
+    consumption = readDataTruck(tractFolder, ccMPath)
+    tractRow.append(consumption)
+
 tractDf = pd.DataFrame(tractRow)
 tractDf["Tracts"] = tractLst
-tractDf.to_csv(r"Result/tractCO2Emission.csv")
+tractDf.to_csv(r"Result/tractTruckCO2_vhicel.csv")
+
+
+# ###############################################################################
+# # GET ROBOT DELIVERY ANALYSIS RESULTS
+# # "totalDistance"
+# # "CO2 emission"
+# # "totalPackagesDelivered"
+# # "totalCustmerServed"
+# # "longestDistance"
+
+
+
+# dataFolder = r"Result/Tract"
+# tractLst = os.listdir(dataFolder)
+# tractLst.sort()
+# tractRow = []
+# task = "longestDistance"
+# for tract in tractLst:
+#     print("Analysing Tract: ", tract)
+#     tractFolder = os.path.join(dataFolder, tract)
+#     data = readDataRobot(tractFolder, task)
+#     tractRow.append(data)
+# tractDf = pd.DataFrame(tractRow)
+# tractDf["Tracts"] = tractLst
+# tractDf.to_csv(r"Result/tractLongestTime.csv")
